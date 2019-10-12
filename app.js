@@ -1,7 +1,8 @@
 const express = require('express');
 const BodyParser = require('body-parser');
-const csv = require("csv");
+const csv = require("fast-csv");
 const ejs = require('ejs');
+const fileUpload = require("express-fileupload");
 const mongoose = require('mongoose');
 const session = require('express-session');
 
@@ -16,6 +17,7 @@ var server = require('http').createServer(app)
 //set app and requirements
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname+'/public'));
+app.use(fileUpload);
 app.use(BodyParser.urlencoded());
 app.use(BodyParser.json());
 app.use(session({secret: 'covoiture'}));
@@ -56,17 +58,11 @@ app.get('/bals', function (req, res) {
   //get from database
 });
 
-app.get('/upload-cam', function (req, res) {
-  res.render("addcam");
-});
-
+// updating the first databse
 app.post('/upload-cam', function(req, res) {
-  if (!req.files) return res.status(400).send('No files were uploaded.');
-     
-  var camionFile = req.files.file;
- 
-  var camions = [];
-         
+  if (!req.body.files) return res.status(400).send('No files were uploaded.');
+  var camionFile = req.body.file; 
+  var camions = [];         
   csv
     .fromString(camionFile.data.toString(), {
       headers: true,
@@ -74,13 +70,43 @@ app.post('/upload-cam', function(req, res) {
     })
   .on("data", function(data){
       camions.push(data);
+      console.log(camions);
+      console.log("=========================================");
+      console.log(data);
     })
   .on("end", function(){
     Camions.create(camions, function(err, documents) {
       if (err) throw err;
     });
-    res.send(authors.length + ' authors have been successfully uploaded.');
+    res.send(camions.length + ' camions have been successfully uploaded.');
   });
 });
 
+// updating second database
+app.post('/upload-cam', function(req, res) {
+  if (!req.body.files) return res.status(400).send('No files were uploaded.');
+  var balFile = req.body.file; 
+  var bals = [];         
+  csv
+    .fromString(balFile.data.toString(), {
+      headers: true,
+      ignoreEmpty: true
+    })
+  .on("data", function(data){
+      bals.push(data);
+      console.log(bals);
+      console.log("=========================================");
+      console.log(data);
+    })
+  .on("end", function(){
+    Bals.create(bals, function(err, documents) {
+      if (err) throw err;
+    });
+    res.send(bals.length + ' bals have been successfully uploaded.');
+  });
+});
+
+
+
+console.log("Listening on port 80")
 app.listen(80)

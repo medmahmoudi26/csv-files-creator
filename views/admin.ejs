@@ -5,8 +5,8 @@
     <title>Page admin</title>
   </head>
   <body>
-    <form action="/" method="POST">
-        <input type="file" name="file" accept="*.csv" /><br/><br/>
+    <form action="/upload-cam" method="post" encType="multipart/form-data">
+        <input type="file" name="file"/><br/><br/>
         <input type="submit" value="Update" />
     </form>
   </body>
