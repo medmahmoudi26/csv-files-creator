@@ -39,10 +39,17 @@ app.post('/add-trn', function (req, res) {
 });
 
 app.get('/percent', function (req, res) {
+  var sites = [];
   //get all the ids from the base 1
   Camions.find({}, function(error, camions) {
     camions.forEach(function (camion) {
-      
+      if (camion.Code_Regat not in sites && camion.Code_Regat.includes('SITE')) sites.push(camion.Site);
+      sites.forEach(function(site) {
+        Camions.find({Code_Regat: site, ecart: "#######"}, function(total) {
+          var numberTotal = total.length;
+        });
+        // insert in percentage week auto increment, insert in site and number of tournées 
+      });
     });
   });
   //remove duplicates and store in new variable
