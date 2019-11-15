@@ -9,7 +9,7 @@ const session = require('express-session');
 //decaler express server
 var app = express()
 var server = require('http').createServer(app)
-//var db = mongoose.connect('') // fill this later
+var db = mongoose.connect('mongodb://localhost:27017/cams') // fill this later
 
 // fill the mongoose models here later
 
@@ -38,26 +38,45 @@ app.post('/add-trn', function (req, res) {
   // import from excel file
 });
 
-app.get('/percent', function (req, res) {
-  var sites = [];
+app.get('/percent-etab', function (req, res) {
+  var etabs = [];
   //get all the ids from the base 1
   Camions.find({}, function(error, camions) {
     camions.forEach(function (camion) {
-      if (camion.Code_Regat not in sites && camion.Code_Regat.includes('SITE')) sites.push(camion.Site);
-      sites.forEach(function(site) {
-        Camions.find({Code_Regat: site, ecart: "#######"}, function(total) {
-          var numberTotal = total.length;
+      if (camion.Regat_etab not in etabs) etabs.push(camion.Regat_etab);
+      etabs.forEach(function(etab) {
+        Camions.find({Regat_etab: etab, /* join with collecte is not nulle},*/ function(TotalEtab) {
+          Object.size = function(obj) {
+            var size = 0, key;
+            for (key in obj) {
+              if (obj.hasOwnProperty(key)) size++;
+            }
+            return size;
+          };
+          var numberTotalEtab = TotalEtab.size;
+          var numberLateEtab = 0;
+          var sites = [];
+          TotalEtab.forEach(function (etab) {
+            if (tourn.ecart == "######") numberLateEtab += 1;
+            if (etab.Regat_site not in sites) {
+              sites.push(etab.Regat_site);
+              TotalSite = TotalEtab.filter(element => element.Regat_site === etab.Regat_site)
+            }
+          });
+          Retard.create({
+            percent: (numberLate*100)/numberTotal
+          });
         });
-        // insert in percentage week auto increment, insert in site and number of tournées 
       });
     });
   });
-  //remove duplicates and store in new variable
-  //for each id in the list count how many times it's repeated(total)
-  //for each id look for tournées where Heure effective > Heure départ du camion and collecte is not null
-  //count number of tournées and find percentage
-  //insert
 });
+// insert in percentage week auto increment, insert in site and number of tournées
+//remove duplicates and store in new variable
+//for each id in the list count how many times it's repeated(total)
+//for each id look for tournées where Heure effective > Heure départ du camion and collecte is not null
+//count number of tournées and find percentage
+//insert
 
 app.get('/bals', function (req, res) {
   //get tournées(join and get all fields from both models) where ecart negative and collecte is not null
@@ -68,8 +87,8 @@ app.get('/bals', function (req, res) {
 // updating the first databse
 app.post('/upload-cam', function(req, res) {
   if (!req.body.files) return res.status(400).send('No files were uploaded.');
-  var camionFile = req.body.file; 
-  var camions = [];         
+  var camionFile = req.body.file;
+  var camions = [];
   csv
     .fromString(camionFile.data.toString(), {
       headers: true,
@@ -92,8 +111,8 @@ app.post('/upload-cam', function(req, res) {
 // updating second database
 app.post('/upload-cam', function(req, res) {
   if (!req.body.files) return res.status(400).send('No files were uploaded.');
-  var balFile = req.body.file; 
-  var bals = [];         
+  var balFile = req.body.file;
+  var bals = [];
   csv
     .fromString(balFile.data.toString(), {
       headers: true,
